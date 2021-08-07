@@ -1,7 +1,7 @@
 # Early dev for ESP32
 ##### based on Mycropython
 
-##Dev env preparaions
+## Dev env preparaions
 ### Install tools
 ```shell
 sudo apt install picocom
