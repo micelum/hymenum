@@ -1,0 +1,6 @@
+{
+  "wifi": {
+    "myNetwork": "myPassword",
+    "yourNetwork": "yourPassword"
+  }
+}
