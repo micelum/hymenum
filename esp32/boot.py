@@ -3,17 +3,18 @@ import time
 import ubinascii
 import ujson
 import os
-from machine import Pin
+from machine import Pin, reset
 
 status_pin = Pin(5, Pin.OUT)
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 
-# Read config from config.json
 root_dir_listing = os.listdir()
+# Read config from config.json
 if 'config.json' in root_dir_listing:
     config_file = open('config.json', 'r')
     raw_config = config_file.read()
+    config_file.close()
     try:
         config = ujson.loads(raw_config.replace('\n', ''))
     except ValueError:
@@ -40,8 +41,8 @@ else:
 if 'wifi' in config and len(config['wifi']):
     for wifi_ssid, wifi_password in config['wifi'].items():
         my_wifi_mac = ubinascii.hexlify(network.WLAN().config('mac'), ':').decode()
-        print(my_wifi_mac, 'connecting to network', wifi_ssid)
         if not wlan.isconnected():
+            print(my_wifi_mac, 'connecting to network', wifi_ssid)
             connect_attempt = 0
             wlan.connect(wifi_ssid, wifi_password)
             while not wlan.isconnected() and connect_attempt < 10:
@@ -81,6 +82,25 @@ else:
             time.sleep_ms(500)
             status_pin.off()
             time.sleep_ms(500)
+
+# Check is this boot initial
+if 'uuid' not in root_dir_listing:
+    print('UUID file not found. Initialising...')
+    import urequests
+    uuid_request = urequests.get('https://www.uuidtools.com/api/generate/v4')
+    uuid = uuid_request.json()[0]
+    print('Get new UUID', uuid)
+    uuid_file = open('uuid', 'w')
+    uuid_file.write(uuid)
+    uuid_file.close()
+
+uuid_file = open('uuid', 'r')
+uuid = uuid_file.read()
+uuid_file.close()
+if not uuid:
+    print('UUID file is empty. Remove it and reset')
+    os.remove('uuid')
+    reset()
 
 # TODO Add OTA
 
